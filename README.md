@@ -21,4 +21,4 @@ Data Summary:
 
 - Rows: 503. -Columns: 16 features Exchange, Symbol, Shortname, Longname, Sector, Industry, Current- price, Marketcap, Ebitda, Revenuegrowth, City, State, Country, Fulltimeemployees, Longbusinesssummary, Weight
 
--And, another one contains the price and date of each day of S&P 500 index over the years from 2015 to 2024. -Rows: 2517 -Columns: 2 features Date, S.P500
+- And, another one contains the price and date of each day of S&P 500 index over the years from 2015 to 2024. -Rows: 2517 -Columns: 2 features Date, S.P500
