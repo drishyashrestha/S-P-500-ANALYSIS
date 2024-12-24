@@ -1,10 +1,10 @@
 # COMPREHENSIVE ANALYSIS OF THE S&P 500 INDEX
 
-By- Drishya Shrestha 
+By - Drishya Shrestha 
 
 November, 2024
 
-Abstract.
+Abstract
 
 The Standard and Poor’s 500 or S&P 500 is the most famous financial benchmark of U.S stock market reflecting the financial health and trends of 500 major companies across various sectors. This paper investi- gates valuation metrics, sectoral trends, and investment insights within the S&P 500 to better understand market behavior and identify potential opportunities. Additionally, regression analysis and visualizations are employed to assess relationships between financial metrics and sectoral dynamics. The findings are intended to guide new investors or learners in making informed decisions.
 
@@ -32,8 +32,13 @@ Disclaimer
 
 This analysis provides a general overview and should not be considered financial advice. Investment decisions should be made based on thorough research and consideration of individual risk tolerance and investment objectives.
 
+
 References
-Index Weighting: Center for Applied Data Research, University of California, Berkeley. “Index Weighting.” Retrieved from https://cdar.berkeley.edu/sites/default/files/index_weighting_joim.pdf
+
+Index Weighting: Center for Applied Data Research, University of California, Berkeley. “Index Weighting.” Retrieved from 
+https://cdar.berkeley.edu/sites/default/files/index_weighting_joim.pdf
+
 S&P 500 Index: Bloomberg. “S&P 500 Index.” Retrieved from https://www.bloomberg.com/quote/SPX: IND?embedded-checkout=true
+
 S&P 500 Stocks Dataset: Kaggle. “S&P 500 Stocks.” Retrieved from https://www.kaggle.com/datasets/ andrewmvd/sp-500-stocks/versions/987/data
 
