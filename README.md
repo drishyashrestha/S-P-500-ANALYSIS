@@ -1,6 +1,7 @@
 # COMPREHENSIVE ANALYSIS OF THE S&P 500 INDEX
 
-Drishya Shrestha 
+By- Drishya Shrestha 
+
 November, 2024
 
 Abstract.
@@ -22,3 +23,14 @@ Data Summary:
 - Rows: 503. -Columns: 16 features Exchange, Symbol, Shortname, Longname, Sector, Industry, Current- price, Marketcap, Ebitda, Revenuegrowth, City, State, Country, Fulltimeemployees, Longbusinesssummary, Weight
 
 - And, another one contains the price and date of each day of S&P 500 index over the years from 2015 to 2024. -Rows: 2517 -Columns: 2 features Date, S.P500
+
+
+Disclaimer
+
+This analysis provides a general overview and should not be considered financial advice. Investment decisions should be made based on thorough research and consideration of individual risk tolerance and investment objectives.
+
+References
+Index Weighting: Center for Applied Data Research, University of California, Berkeley. “Index Weighting.” Retrieved from https://cdar.berkeley.edu/sites/default/files/index_weighting_joim.pdf
+S&P 500 Index: Bloomberg. “S&P 500 Index.” Retrieved from https://www.bloomberg.com/quote/SPX: IND?embedded-checkout=true
+S&P 500 Stocks Dataset: Kaggle. “S&P 500 Stocks.” Retrieved from https://www.kaggle.com/datasets/ andrewmvd/sp-500-stocks/versions/987/data
+
