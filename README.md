@@ -25,6 +25,9 @@ Data Summary:
 - And, another one contains the price and date of each day of S&P 500 index over the years from 2015 to 2024. -Rows: 2517 -Columns: 2 features Date, S.P500
 
 
+
+© 2024 Drishya Shrestha. All rights reserved.  
+
 Disclaimer
 
 This analysis provides a general overview and should not be considered financial advice. Investment decisions should be made based on thorough research and consideration of individual risk tolerance and investment objectives.
