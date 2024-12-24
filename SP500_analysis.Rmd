@@ -1,0 +1,345 @@
+---
+title: "COMPREHENSIVE ANALYSIS OF THE S&P 500 INDEX"
+author: "Drishya Shrestha"
+output: pdf_document
+date: November, 2024
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(tinytex)
+df <- read_csv('/Users/drishyashrestha/Downloads/145 DATA SCIENCE PROJECT/s&p500.csv')
+time_df <- read.csv('/Users/drishyashrestha/Downloads/145 DATA SCIENCE PROJECT/sp500_index.csv')
+
+```
+
+
+
+## Abstract.
+
+The Standard and Poor's 500 or S&P 500 is the most famous financial benchmark of U.S stock market reflecting the financial health and trends of 500 major companies across various sectors. This paper investigates valuation metrics, sectoral trends, and investment insights within the S&P 500 to better understand market behavior and identify potential opportunities. Additionally, regression analysis and visualizations are employed to assess relationships between financial metrics and sectoral dynamics. The findings are intended to guide new investors or learners in making informed decisions.
+
+
+
+## Introduction
+The S&P 500 Index, comprising 500 of the largest publicly traded companies in the United States, is a cornerstone of financial analysis and a critical indicator of market performance. Representing a diverse range of sectors, including technology, healthcare, finance, and energy, the index offers a comprehensive snapshot of the U.S. economy and stock market trends. For investors and analysts, understanding the dynamics within the S&P 500 is crucial for identifying investment opportunities and assessing market risks.
+
+Valuation metrics such as the Price-to-Earnings (P/E) ratio are fundamental tools in this analysis. These ratios provide insight into whether a company’s stock is overvalued, undervalued, or fairly priced, based on its earnings performance relative to its market capitalization. Additionally, sector-level trends play a significant role in influencing valuations, as factors such as technological innovation, regulatory changes, and macroeconomic conditions vary across industries.
+
+This paper investigates the valuation and performance of companies within the S&P 500, focusing on identifying those with attractive P/E ratios, analyzing sectoral differences, and exploring broader market trends. By leveraging descriptive statistics, data visualization, and regression analysis, this study aims to uncover actionable insights for investors. The findings offer a deeper understanding of market behavior and provide a framework for strategic decision-making in portfolio management.
+
+
+
+### Dataset Overview:
+The datasets used is based on the S&P 500 Index, which includes 503 stocks (some companies have multiple share classes). It captures various company fundamentals with summary below:
+
+Data Summary:  
+- Rows: `r nrow(df)`. 
+-Columns: `r ncol(df)` features `r colnames(df)`
+
+And, another one contains the price and date of each day of S&P 500 index over the years from 2015 to 2024.
+-Rows: `r nrow(time_df)`
+-Columns: `r ncol(time_df)` features `r colnames(time_df)`
+
+
+
+
+
+
+# Exploratory Data Analysis
+```{r}
+head(df)
+
+#Removing unnecessary columns
+df_cleaned <- df%>%
+  select(-Shortname) %>%
+    rename(Name = Longname, 
+           'MarketCap%'= Weight)
+    
+head(df_cleaned)  
+```
+## Stock count for each sector
+```{r }
+sectors_count<- df_cleaned %>%
+  group_by(Sector)%>%
+    summarize(Stock_count= n())
+sectors_count
+```
+
+
+### Market Capitalization Adjustment for Alphabet Inc. (GOOG and GOOGL)
+
+Upon reviewing the dataset, we found that both **GOOG** and **GOOGL** represent different classes of stock for **Alphabet Inc.**, with each having a market capitalization of approximately $2 trillion. However, since **Alphabet Inc.** as a parent company has a total market capitalization of $2 trillion, we need to avoid double-counting by assigning a value of `NA` to the market capitalization of one of the classes.
+
+
+```{r}
+df_cleaned$Marketcap[df_cleaned$Symbol == "GOOG"] = NA
+head(df_cleaned)
+```
+
+## Average Market Capitalization for Each Sector
+
+To better understand the distribution of market capitalizations across different sectors, we calculated the average market capitalization for each sector. This helps identify how sectors compare in terms of their overall financial size and can provide valuable insights into sector-specific trends.
+
+
+```{r}
+avg_marketcap <- df_cleaned %>%
+  group_by(Sector) %>%
+  summarize(AverageCap = mean(Marketcap, na.rm = TRUE))
+# Plot average market cap by sector
+ggplot(avg_marketcap, aes(x = Sector, y = AverageCap, fill = Sector)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::label_number()) +  # Convert numbers to billions/millions automatically
+  theme_minimal() +
+  labs(title = "Average Market Cap by Sector",
+       x = "Sector", y = "Average Market Cap (in billions)") +
+  theme(legend.position = "none")
+```
+
+## Sector Breakdown of Total Market Capitalization
+
+In order to examine the contribution of each sector to the overall market capitalization, we aggregated the market cap by sector and calculated the percentage share of each sector in the total market cap. This analysis highlights which sectors hold the largest portion of the market, providing insights into sector dominance and their relative importance in the overall economy.
+
+
+```{r}
+sector_marketcap <- df_cleaned %>%
+  group_by(Sector) %>%
+  summarize(TotalMarketCap = sum(Marketcap, na.rm = TRUE)) %>%
+  mutate(Percentage = TotalMarketCap / sum(TotalMarketCap) * 100,
+         Label = paste0(round(Percentage, 1), "%"))
+
+# Create the pie chart
+ggplot(sector_marketcap, aes(x = "", y = TotalMarketCap, fill = Sector)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Total Market Cap by Sector") +
+  geom_text(aes(label = Label),
+            position = position_stack(vjust = 0.5),
+            color = "white")
+```
+Based on the pie chart showing the breakdown of total market capitalization by sector, it is evident that the Technology sector holds the largest share, contributing approximately 31.71% of the total market cap. This is followed by the Financial Services sector, which accounts for 13.61%. Other notable sectors include Healthcare with 11.35%, Consumer Cyclical at 9.89% and Consumer services at 7.37%.  
+
+Technology leads with major companies like AAPL, MSFT, and NVDA, whose large market caps heavily influence the sector. Financial Services includes giants like JPM, BRK-B, BX, GS, which are crucial to its market share. Healthcare is driven by companies like UNH, JNJ, and LLY, which have substantial market capitalizations and dominate the sector's growth. Consumer Cyclical is influenced by AMZN, TSLA, and HD, while Communication Services is dominated by META, GOOGL, and NFLX, primarily through their control of digital advertising, media, and entertainment.
+
+
+
+## Relationship Between Market Capitalization and Revenue Growth
+```{r, warning=FALSE}
+# Correlation between Marketcap and Revenuegrowth
+correlation<- cor(df_cleaned$Marketcap, df_cleaned$Revenuegrowth, use = "complete.obs")
+
+# Scatter plot with linear regression line
+ggplot(df_cleaned, aes(x = Marketcap, y = Revenuegrowth)) +
+  geom_point(color = "blue") +
+  theme_minimal() +
+  labs(title = "Market Cap vs Revenue Growth",
+       x = "Market Cap (in billions)", y = "Revenue Growth (%)") +
+  geom_smooth(method = "lm", color = "red")
+
+```
+The analysis of the correlation between Revenue Growth and Market Capitalization for the S&P 500 companies reveals a low positive correlation `r correlation`. This suggests that while there is some tendency for companies with higher revenue growth to also have larger market capitalizations, the relationship is weak.  
+
+The almost straight linear regression line further confirms this weak positive association, suggesting that Revenue Growth does not significantly drive Market Capitalization. Other factors likely influence market cap more strongly, such as investor sentiment, industry performance, and external economic conditions, and it is not strongly driven by revenue growth alone. Therefore, although revenue growth may contribute to a company's market value, it is not the primary or most significant factor. This weak positive correlation implies that other variables likely play a more substantial role in determining market capitalization.
+
+
+## P/E Ratio Valuation Metric
+The P/E ratio (Price-to-Earnings) is one of the most widely used valuation metrics to assess whether a stock is undervalued, fairly valued, or overvalued. 
+Given the sector-specific variations in typical P/E ratios, we adopted a median-based approach for categorization. Companies with P/E ratios below 75% of their sector's median were classified as undervalued, those between 75% and 125% as fairly valued, and those exceeding 125% as overvalued.
+``` {r}
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Compute P/E Ratios
+valuation_data <- df_cleaned %>%
+  mutate(PE_Ratio = Marketcap / Ebitda) %>%  # Calculate P/E ratio
+  filter(Ebitda > 0)  # Filter out companies with negative earnings
+
+# Step 2: Sector Median and Categorization
+valuation_analysis <- valuation_data %>%
+  group_by(Sector) %>%
+  mutate(Sector_Median_PE = median(PE_Ratio, na.rm = TRUE),
+         Valuation = case_when(
+           PE_Ratio < 0.75 * Sector_Median_PE ~ "Undervalued",
+           PE_Ratio > 1.25 * Sector_Median_PE ~ "Overvalued",
+           TRUE ~ "Fairly Valued"
+         ))
+
+# Step 3: Summary Statistics
+valuation_summary <- valuation_analysis %>%
+  group_by(Sector, Valuation) %>%
+  summarise(Count = n(), .groups = "drop")
+
+# Step 4: Visualization
+ggplot(valuation_summary, aes(x = Sector, y = Count, fill = Valuation)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Valuation Analysis by Sector",
+       x = "Sector", 
+       y = "Number of Companies",
+       fill = "Valuation Category") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+The resulting visualization revealed sector-specific trends in stock valuation. For instance, the technology, finance and healthcare sectors showed a higher concentration of overvalued companies, likely reflecting investor optimism and growth potential. On the other hand, sectors like utilities and industrials exhibited a more balanced distribution, with a significant presence of undervalued and fairly valued stocks. This analysis provides actionable insights for investors, allowing them to identify opportunities within sectors that align with their investment strategy, whether it involves targeting undervalued opportunities for value investing or focusing on high-growth sectors for long-term gains.
+
+
+
+## RELAIONSHIP BETWEEN ALL QUANTIFIABLE VARIABLES
+By creating a correlation matrix, we aim to understand how these factors are related to each other and their potential implications for understanding market performance and company characteristics. The correlation values in the heatmap indicate the strength and direction of the linear relationships between different variables, with a value closer to 1 indicating a strong positive relationship, while values closer to -1 show a negative relationship.
+```{r} 
+# Load required libraries
+library(ggplot2)
+library(reshape2)
+
+# Select quantitative columns from the dataset
+quantitative_data <- data.frame(
+  Currentprice = df$Currentprice,
+  Marketcap = df$Marketcap,
+  Ebitda = df$Ebitda,
+  Revenuegrowth = df$Revenuegrowth,
+  Fulltimeemployees = df$Fulltimeemployees,
+  Weight = df$Weight
+)
+
+# Handle missing values (if necessary)
+quantitative_data <- na.omit(quantitative_data)
+
+# 1. Calculate Correlation Matrix
+cor_matrix <- cor(quantitative_data)
+
+# 2. Prepare Data for Heatmap
+# Melt the correlation matrix into a format suitable for ggplot
+cor_melt <- melt(cor_matrix)
+
+# Create the heatmap with correlation values in each box
+ggplot(cor_melt, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +  # Heatmap boxes
+  geom_text(aes(label = round(value, 2)), color = "white", size = 4) +  # Display correlation values
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1)) +  # Color gradient
+  labs(title = "Correlation Heatmap of S&P500 index", x = "Variables", y = "Variables", fill = "Correlation") +
+  theme_minimal() +  # Clean theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        axis.text.y = element_text(angle = 45, hjust = 1),  # Rotate y-axis labels
+        plot.title = element_text(hjust = 0.5))  # Center title
+```
+The correlation analysis of the financial variables reveals several important insights:
+
+A strong positive correlation of 0.85 between Market Cap and EBITDA suggests that larger companies tend to be more profitable, as measured by EBITDA. This could indicate that larger companies are more profitable or efficient at generating operational profits compared to smaller firms.
+Similarly, a high correlation of 0.85 between EBITDA and Weight indicates that companies with higher EBITDA are more influential in the S&P 500 index, as they hold a larger market share. Since Weight represents the percentage of participation in the index, it is not surprising that companies with higher EBITDA contribute more to the index's overall performance.
+The perfect correlation (1.00) between Market Cap and Weight confirms that a company's market capitalization directly proportional its weight in the S&P 500 index. This is logical because the S&P 500 index is weighted by market cap, meaning that companies with larger market capitalizations have a higher representation in the index.
+
+
+
+
+
+
+
+## Time Series Analysis of S&P 500 Index Trend (2015 to Today)
+
+``` {r, warning=FALSE}
+time_df$Date <- as.Date(time_df$Date, format = "%Y-%m-%d")
+time_df<- time_df%>%
+  rename(Price = "S.P500") 
+ggplot(time_df, aes(x = Date, y = Price, color = "S&P 500 Index")) +
+  geom_line(size = 1) +          
+  theme_minimal() +              
+  labs(title = "S&P 500 Index Trend",   
+       x = "Year",                              
+       y = "Price ($)",                          
+       color = "Legend") +                      
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") + # Display years
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(hjust = 0.5)) +  # Center title
+  scale_color_manual(values = c("S&P 500 Index" = "blue")) # Set line color and legend
+
+
+
+```
+
+## Observations from the S&P 500 Index Trend (2015 - Present)
+From 2015 to the present, the S&P 500 Index has experienced several notable trends and fluctuations reflecting both bullish and bearish market cycles driven by economic and geopolitical events, which can be seen clearly in the time series graph.
+
+From 2016 to 2018, the S&P 500 experienced a period of sustained growth. This was largely driven by strong corporate earnings, economic recovery following the 2008 financial crisis, and favorable fiscal policies such as tax cuts under the Trump administration. The sharpest downturn in recent history was seen in early 2020, when the COVID-19 pandemic triggered a global economic shutdown. The global economic shutdown, coupled with fears of a prolonged economic contraction, led to an immediate loss in market value. The S&P 500 fell drastically in March 2020 but quickly rebounded, aided by stimulus packages, low-interest rates, and vaccine developments, leading to another uptrend. By 2021, the market saw rapid recovery, reaching new highs as the economy reopened, and investor sentiment remained optimistic about the future.
+
+In 2022, we witnessed another significant pullback, this time largely driven by fears of inflation and the Federal Reserve’s interest rate hikes aimed at controlling it. These rate hikes caused concerns about an economic slowdown and higher borrowing costs, which led to widespread market declines, particularly in the technology sector, which is sensitive to interest rates. As inflation showed signs of cooling, and the Fed began signaling a possible slowdown in rate hikes, investor sentiment shifted. The market rallied on the back of optimism that the economy would avoid a severe recession, and corporate earnings remained relatively
+strong. As we move into 2024, the market has been navigating a more stable environment, but risks remain.
+The overall trend has been upward, showcasing the resilience of the U.S. economy. This pattern underlines the importance of a long-term investment strategy, as short-term fluctuations are often overshadowed by the index's overall upward trajectory.
+
+
+
+## Forecasting using ARIMA model
+To predict future movements of the S&P 500 index, we apply an ARIMA (AutoRegressive Integrated Moving Average) model, a statistical model commonly used for time series forecasting. The ARIMA model accounts for trends, seasonality, and random fluctuations in the data, allowing us to generate forecasts based on past trends.
+
+``` {r}
+
+
+library(forecast)
+# Extract the year from the Date column
+time_df$Year <- format(time_df$Date, "%Y")
+
+# Fit the ARIMA model
+arima_model <- auto.arima(time_df$Price)
+
+# Forecast the next 30 days (or however many you want)
+forecasted_values <- forecast(arima_model, h = 90)
+
+# Create the time series plot with Date on the x-axis and Price on the y-axis
+ggplot() +
+  # Historical data line
+  geom_line(data = time_df, aes(x = Date, y = Price, color = "Historical Data"), size = 1) +  
+  # Forecasted data line
+  geom_line(data = data.frame(Date = seq(max(time_df$Date), by = "days", length.out = 90), 
+                              Price = forecasted_values$mean), 
+            aes(x = Date, y = Price, color = "Forecasted Data"), size = 1) +  
+  labs(title = "S&P 500 Index Forecast", 
+       x = "Date", 
+       y = "Index Value", 
+       color = "Legend") +  # Legend title
+  scale_x_date(date_labels = "%Y-%m-%d", date_breaks = "1 year") +  # Show years on the x-axis
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+    plot.title = element_text(hjust = 0.5)             # Center the plot title
+  ) +
+  # Define colors for the legend
+  scale_color_manual(values = c("Historical Data" = "blue", "Forecasted Data" = "green"))
+
+
+```
+
+Using ARIMA forecasting, the projected index values for the next 90 days suggest a continued upward trend, with the index approaching the 6000 mark.
+
+This forecast indicates sustained growth, likely driven by optimism in the market and favorable economic conditions. However, it's crucial to consider potential volatility due to external factors such as monetary policy changes, geopolitical tensions, or unexpected economic slowdowns.
+
+
+
+
+# Conclusion
+This analysis demonstrates how key financial concepts, such as market capitalization, revenue growth, valuation metrics (P/E ratio), and correlation analysis, can be applied to understand the S&P 500 index and its constituent companies. The visualizations, including the pie chart, heatmap, and time series plots, effectively illustrate these concepts, making them more accessible and easier to grasp. By understanding these relationships and trends, investors can make more informed decisions about their portfolios and navigate the complexities of the stock market.
+
+While the ARIMA model offers a baseline for forecasting, more sophisticated techniques can be employed. Machine learning algorithms, such as Recurrent Neural Networks (RNNs) like Long Short-Term Memory (LSTM) networks, can potentially capture complex non-linear patterns and improve forecast accuracy.
+This research underscores the importance of utilizing data analysis and visualization techniques to gain insights into market dynamics and make informed investment decisions.
+
+This conclusion is concise, summarizes the key findings, acknowledges the limitations of the current analysis, and points towards avenues for further improvement.
+
+
+### Disclaimer
+This analysis provides a general overview and should not be considered financial advice. Investment decisions should be made based on thorough research and consideration of individual risk tolerance and investment objectives.
+
+
+## References
+
+Index Weighting: Center for Applied Data Research, University of California, Berkeley. "Index Weighting." Retrieved from https://cdar.berkeley.edu/sites/default/files/index_weighting_joim.pdf
+
+S&P 500 Index: Bloomberg. "S&P 500 Index." Retrieved from https://www.bloomberg.com/quote/SPX:IND?embedded-checkout=true
+
+S&P 500 Stocks Dataset: Kaggle. "S&P 500 Stocks." Retrieved from https://www.kaggle.com/datasets/andrewmvd/sp-500-stocks/versions/987/data
+
+
+
+
+
