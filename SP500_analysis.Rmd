@@ -10,8 +10,8 @@ date: November, 2024
 library(tidyverse)
 library(ggplot2)
 library(tinytex)
-df <- read_csv('/Users/drishyashrestha/Downloads/145 DATA SCIENCE PROJECT/s&p500.csv')
-time_df <- read.csv('/Users/drishyashrestha/Downloads/145 DATA SCIENCE PROJECT/sp500_index.csv')
+df <- read_csv('s&p500.csv')
+time_df <- read.csv('sp500_index.csv')
 
 ```
 
